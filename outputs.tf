@@ -8,37 +8,37 @@
 # -----------------------------------------------------------------------------
 output "vpc_id" {
   description = "VPC ID"
-  value       = aws_vpc.main.id
+  value       = module.vpc.vpc_id
 }
 
 output "vpc_cidr" {
   description = "VPC CIDR Block"
-  value       = aws_vpc.main.cidr_block
+  value       = module.vpc.vpc_cidr
 }
 
 output "public_subnet_ids" {
   description = "Public Subnet IDs"
-  value       = aws_subnet.public[*].id
+  value       = module.vpc.public_subnet_ids
 }
 
 output "app_private_subnet_ids" {
   description = "App Private Subnet IDs"
-  value       = aws_subnet.private_app[*].id
+  value       = module.vpc.app_private_subnet_ids
 }
 
 output "db_private_subnet_ids" {
   description = "DB Private Subnet IDs"
-  value       = aws_subnet.private_db[*].id
+  value       = module.vpc.db_private_subnet_ids
 }
 
 output "all_private_subnet_ids" {
   description = "All Private Subnet IDs (App + DB)"
-  value       = concat(aws_subnet.private_app[*].id, aws_subnet.private_db[*].id)
+  value       = concat(module.vpc.app_private_subnet_ids, module.vpc.db_private_subnet_ids)
 }
 
 output "nat_gateway_ips" {
   description = "NAT Gateway Public IPs (HA)"
-  value       = aws_eip.nat[*].public_ip
+  value       = module.vpc.nat_gateway_ips
 }
 
 # -----------------------------------------------------------------------------
@@ -46,22 +46,22 @@ output "nat_gateway_ips" {
 # -----------------------------------------------------------------------------
 output "bastion_public_ip" {
   description = "Bastion Host Public IP"
-  value       = aws_instance.bastion.public_ip
+  value       = module.ec2.bastion_public_ip
 }
 
 output "bastion_instance_id" {
   description = "Bastion Host Instance ID"
-  value       = aws_instance.bastion.id
+  value       = module.ec2.bastion_instance_id
 }
 
 output "mgmt_server_private_ip" {
   description = "Management Server Private IP"
-  value       = aws_instance.mgmt.private_ip
+  value       = module.ec2.mgmt_server_private_ip
 }
 
 output "mgmt_server_instance_id" {
   description = "Management Server Instance ID"
-  value       = aws_instance.mgmt.id
+  value       = module.ec2.mgmt_server_instance_id
 }
 
 # -----------------------------------------------------------------------------
@@ -92,22 +92,22 @@ output "rds_database_name" {
 # -----------------------------------------------------------------------------
 output "sg_bastion_id" {
   description = "Bastion Security Group ID"
-  value       = aws_security_group.bastion.id
+  value       = module.security_groups.bastion_sg_id
 }
 
 output "sg_mgmt_id" {
   description = "Management Server Security Group ID"
-  value       = aws_security_group.mgmt.id
+  value       = module.security_groups.mgmt_sg_id
 }
 
 output "sg_rds_id" {
   description = "RDS Security Group ID"
-  value       = aws_security_group.rds.id
+  value       = module.security_groups.rds_sg_id
 }
 
 output "sg_eks_cluster_id" {
   description = "EKS Cluster Security Group ID (for future use)"
-  value       = aws_security_group.eks_cluster.id
+  value       = module.security_groups.eks_cluster_sg_id
 }
 
 # -----------------------------------------------------------------------------
@@ -115,12 +115,12 @@ output "sg_eks_cluster_id" {
 # -----------------------------------------------------------------------------
 output "ssh_key_name" {
   description = "SSH Key Pair Name"
-  value       = aws_key_pair.generated.key_name
+  value       = module.ec2.ssh_key_name
 }
 
 output "ssh_private_key_path" {
   description = "SSH Private Key File Path"
-  value       = local_file.private_key.filename
+  value       = module.ec2.ssh_private_key_path
 }
 
 # -----------------------------------------------------------------------------
@@ -128,12 +128,12 @@ output "ssh_private_key_path" {
 # -----------------------------------------------------------------------------
 output "ssh_bastion_command" {
   description = "SSH command to connect to Bastion Host"
-  value       = "ssh -i ${var.key_name}.pem ubuntu@${aws_instance.bastion.public_ip}"
+  value       = "ssh -i ${var.key_name}.pem ubuntu@${module.ec2.bastion_public_ip}"
 }
 
 output "ssh_mgmt_via_bastion_command" {
   description = "SSH command to connect to Management Server via Bastion (ProxyJump)"
-  value       = "ssh -i ${var.key_name}.pem -J ubuntu@${aws_instance.bastion.public_ip} ubuntu@${aws_instance.mgmt.private_ip}"
+  value       = "ssh -i ${var.key_name}.pem -J ubuntu@${module.ec2.bastion_public_ip} ubuntu@${module.ec2.mgmt_server_private_ip}"
 }
 
 output "mysql_connect_command" {
@@ -151,8 +151,8 @@ output "eks_cluster_config" {
     eksctl create cluster \
       --name ${var.eks_cluster_name} \
       --region ${var.aws_region} \
-      --vpc-private-subnets ${join(",", aws_subnet.private_app[*].id)} \
-      --vpc-public-subnets ${join(",", aws_subnet.public[*].id)} \
+      --vpc-private-subnets ${join(",", module.vpc.app_private_subnet_ids)} \
+      --vpc-public-subnets ${join(",", module.vpc.public_subnet_ids)} \
       --without-nodegroup
     
     # 관리형 노드 그룹 추가
@@ -196,12 +196,12 @@ output "infrastructure_summary" {
     ╔══════════════════════════════════════════════════════════════════════╗
     ║                    PetClinic Infrastructure Summary                   ║
     ╠══════════════════════════════════════════════════════════════════════╣
-    ║  VPC:                ${aws_vpc.main.id}
+    ║  VPC:                ${module.vpc.vpc_id}
     ║  Region:             ${var.aws_region}
     ║  Environment:        ${var.environment}
     ╠══════════════════════════════════════════════════════════════════════╣
-    ║  Bastion IP:         ${aws_instance.bastion.public_ip}
-    ║  Mgmt Server IP:     ${aws_instance.mgmt.private_ip} (Private)
+    ║  Bastion IP:         ${module.ec2.bastion_public_ip}
+    ║  Mgmt Server IP:     ${module.ec2.mgmt_server_private_ip} (Private)
     ╠══════════════════════════════════════════════════════════════════════╣
     ║  RDS Endpoint:       ${aws_db_instance.main.endpoint}
     ║  RDS Database:       ${aws_db_instance.main.db_name}
@@ -215,10 +215,10 @@ output "infrastructure_summary" {
     
     🔐 SSH 접속 방법:
     1. Bastion 접속:
-       ssh -i ${var.key_name}.pem ubuntu@${aws_instance.bastion.public_ip}
+       ssh -i ${var.key_name}.pem ubuntu@${module.ec2.bastion_public_ip}
     
     2. Management Server 접속 (ProxyJump):
-       ssh -i ${var.key_name}.pem -J ubuntu@${aws_instance.bastion.public_ip} ubuntu@${aws_instance.mgmt.private_ip}
+       ssh -i ${var.key_name}.pem -J ubuntu@${module.ec2.bastion_public_ip} ubuntu@${module.ec2.mgmt_server_private_ip}
     
     📂 DB 초기화:
        Management Server에서 /home/ubuntu/init.sql 파일을 사용하여 초기화

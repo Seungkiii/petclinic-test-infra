@@ -23,9 +23,7 @@ resource "aws_iam_role" "mgmt_server" {
     ]
   })
 
-  tags = {
-    Name = "${var.project_name}-mgmt-server-role"
-  }
+  tags = local.iam_tags["mgmt_server_role"]
 }
 
 # -----------------------------------------------------------------------------
@@ -46,8 +44,6 @@ resource "aws_iam_instance_profile" "mgmt_server" {
   name = "${var.project_name}-mgmt-server-profile"
   role = aws_iam_role.mgmt_server.name
 
-  tags = {
-    Name = "${var.project_name}-mgmt-server-profile"
-  }
+  tags = local.iam_tags["mgmt_server_profile"]
 }
 

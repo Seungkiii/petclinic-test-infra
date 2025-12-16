@@ -16,12 +16,7 @@ resource "aws_s3_bucket" "terraform_state" {
     prevent_destroy = true
   }
 
-  tags = {
-    Name        = "${var.project_name}-terraform-state"
-    Purpose     = "Terraform State Storage"
-    Environment = var.environment
-    ManagedBy   = "Terraform"
-  }
+  tags = local.s3_backend_tags
 }
 
 # -----------------------------------------------------------------------------
@@ -118,7 +113,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "terraform_state" {
 # S3 Bucket Policy
 # Terraform이 state 파일에 접근할 수 있도록 권한 부여
 # -----------------------------------------------------------------------------
-data "aws_caller_identity" "current" {}
+# data source는 data.tf로 이동됨
 
 data "aws_iam_policy_document" "terraform_state" {
   count = var.tfstate_bucket_name != "" ? 1 : 0

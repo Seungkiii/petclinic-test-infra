@@ -16,6 +16,11 @@ variable "environment" {
   description = "환경 (prod, staging, dev)"
   type        = string
   default     = "prod"
+
+  validation {
+    condition     = contains(["prod", "staging", "dev"], var.environment)
+    error_message = "Environment must be one of: prod, staging, dev."
+  }
 }
 
 variable "aws_region" {
@@ -37,6 +42,11 @@ variable "availability_zones" {
   description = "사용할 가용 영역 목록"
   type        = list(string)
   default     = ["ap-northeast-2a", "ap-northeast-2b"]
+
+  validation {
+    condition     = length(var.availability_zones) >= 2 && length(var.availability_zones) <= 3
+    error_message = "Availability zones must be between 2 and 3 for high availability."
+  }
 }
 
 variable "public_subnet_cidrs" {
@@ -150,6 +160,11 @@ variable "db_backup_retention_period" {
   description = "자동 백업 보관 기간 (일)"
   type        = number
   default     = 7
+
+  validation {
+    condition     = var.db_backup_retention_period >= 0 && var.db_backup_retention_period <= 35
+    error_message = "Backup retention period must be between 0 and 35 days."
+  }
 }
 
 # -----------------------------------------------------------------------------
@@ -177,6 +192,11 @@ variable "s3_object_lock_mode" {
   description = "S3 Object Lock 모드 (GOVERNANCE 또는 COMPLIANCE)"
   type        = string
   default     = "GOVERNANCE" # COMPLIANCE는 삭제 불가, GOVERNANCE는 권한 있는 사용자가 삭제 가능
+
+  validation {
+    condition     = contains(["GOVERNANCE", "COMPLIANCE"], var.s3_object_lock_mode)
+    error_message = "S3 Object Lock mode must be either GOVERNANCE or COMPLIANCE."
+  }
 }
 
 variable "s3_object_lock_days" {

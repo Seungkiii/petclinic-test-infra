@@ -10,7 +10,7 @@
 resource "aws_db_subnet_group" "main" {
   name        = "${var.project_name}-db-subnet-group"
   description = "Database subnet group for ${var.project_name}"
-  subnet_ids  = aws_subnet.private_db[*].id
+  subnet_ids  = module.vpc.db_private_subnet_ids
 
   tags = {
     Name = "${var.project_name}-db-subnet-group"
@@ -81,7 +81,7 @@ resource "aws_db_instance" "main" {
 
   # 네트워크 설정
   db_subnet_group_name   = aws_db_subnet_group.main.name
-  vpc_security_group_ids = [aws_security_group.rds.id]
+  vpc_security_group_ids = [module.security_groups.rds_sg_id]
   publicly_accessible    = false
   port                   = 3306
 
@@ -108,9 +108,7 @@ resource "aws_db_instance" "main" {
   # 자동 마이너 버전 업그레이드
   auto_minor_version_upgrade = true
 
-  tags = {
-    Name = "${var.project_name}-db-prod"
-  }
+  tags = local.rds_tags
 }
 
 # -----------------------------------------------------------------------------
@@ -120,7 +118,7 @@ resource "aws_db_instance" "main" {
 resource "null_resource" "copy_sql_to_mgmt" {
   # Management Server와 RDS가 모두 생성된 후 실행
   depends_on = [
-    aws_instance.mgmt,
+    module.ec2.mgmt_server_instance_id,
     aws_db_instance.main
   ]
 
@@ -138,13 +136,13 @@ resource "null_resource" "copy_sql_to_mgmt" {
       echo "============================================"
       echo ""
       echo "1. 먼저 SSH 키 파일을 Bastion으로 복사:"
-      echo "   scp -i ${var.key_name}.pem ${var.key_name}.pem ubuntu@${aws_instance.bastion.public_ip}:/home/ubuntu/"
+      echo "   scp -i ${var.key_name}.pem ${var.key_name}.pem ubuntu@${module.ec2.bastion_public_ip}:/home/ubuntu/"
       echo ""
       echo "2. Bastion에 SSH 접속:"
-      echo "   ssh -i ${var.key_name}.pem ubuntu@${aws_instance.bastion.public_ip}"
+      echo "   ssh -i ${var.key_name}.pem ubuntu@${module.ec2.bastion_public_ip}"
       echo ""
       echo "3. Bastion에서 Management Server로 SSH 접속:"
-      echo "   ssh -i ${var.key_name}.pem ubuntu@${aws_instance.mgmt.private_ip}"
+      echo "   ssh -i ${var.key_name}.pem ubuntu@${module.ec2.mgmt_server_private_ip}"
       echo ""
       echo "4. Management Server에서 init.sql 파일이 있는지 확인:"
       echo "   ls -la /home/ubuntu/init.sql"
