@@ -14,9 +14,7 @@ module "vpc" {
   eks_cluster_name         = var.eks_cluster_name
   name_prefix              = local.name_prefix
 
-  # ---------------------------------------------------------------------------
   # Azure VPN & DNS Configuration
-  # ---------------------------------------------------------------------------
   azure_bgp_asn   = var.azure_bgp_asn
   azure_public_ip = var.azure_public_ip
   azure_cidr      = var.azure_cidr

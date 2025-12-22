@@ -52,3 +52,7 @@ variable "eks_cluster_sg_tags" {
   default     = {}
 }
 
+variable "azure_cidr" {
+  description = "Azure VNet의 CIDR 블록 (라우팅 대상)"
+  type        = string
+}

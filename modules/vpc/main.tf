@@ -86,17 +86,14 @@ resource "aws_subnet" "private_db" {
 # -----------------------------------------------------------------------------
 resource "aws_nat_gateway" "main" {
   # count 제거 (단일 리소스)
-  
   vpc_id            = aws_vpc.main.id
   availability_mode = "regional"
-
   tags = merge(
     var.nat_gateway_tags,
     {
       Name = "${var.name_prefix}-nat-gw-regional"
     }
   )
-
   depends_on = [aws_internet_gateway.main]
 }
 
