@@ -175,6 +175,10 @@ output "eks_cluster_config" {
   EOT
 }
 
+output "eso_policy_arn" {
+  value = aws_iam_policy.external_secrets_policy.arn
+}
+
 # -----------------------------------------------------------------------------
 # Summary
 # -----------------------------------------------------------------------------

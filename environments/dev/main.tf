@@ -100,6 +100,30 @@ resource "aws_iam_instance_profile" "mgmt_server" {
 }
 
 # -----------------------------------------------------------------------------
+# ESO가 사용할 IAM 정책 정의 (Secrets Manager & SSM 읽기)
+# -----------------------------------------------------------------------------
+
+resource "aws_iam_policy" "external_secrets_policy" {
+  name        = "petclinic-external-secrets-policy"
+  description = "Allow External Secrets Operator to read secrets"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:DescribeSecret",
+          "ssm:GetParameter"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+# -----------------------------------------------------------------------------
 # EC2 Module 호출
 # -----------------------------------------------------------------------------
 module "ec2" {
