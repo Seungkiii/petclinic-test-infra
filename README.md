@@ -1,4 +1,4 @@
-# PetClinic 프로덕션 인프라 (Terraform)
+# PetClinic 인프라 (Terraform)
 
 Spring PetClinic MSA 애플리케이션을 위한 AWS 프로덕션 인프라 구축 코드입니다.
 
